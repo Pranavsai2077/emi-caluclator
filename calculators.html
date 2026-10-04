@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Calculators — Loan Application</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E3D3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink:#14213D;
+    --teal:#0E3D3E;
+    --teal-dark:#0A2C2D;
+    --paper:#FBFAF6;
+    --paper-shade:#F1EFE7;
+    --gold:#B8863B;
+    --gold-soft:#EFE2C6;
+    --sage:#E7EEE8;
+    --slate:#5B6470;
+    --line:#D8D3C6;
+    --danger:#8C3B2E;
+    --good:#2C6B45;
+    --good-bg:#DCEFE1;
+    --caution:#8A6516;
+    --caution-bg:#F7E9C9;
+    --high-bg:#F4D9D2;
+    --radius:3px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .doc{max-width:860px; margin:0 auto; padding:0 0 80px;}
+
+  /* ---------- Site nav ---------- */
+  .site-nav{background:var(--teal-dark); border-bottom:1px solid rgba(251,250,246,0.12);}
+  .site-nav-inner{max-width:860px; margin:0 auto; display:flex;}
+  .site-nav a{
+    padding:13px 20px; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    letter-spacing:.06em; text-transform:uppercase; color:#9FB8B2; text-decoration:none;
+    border-bottom:2px solid transparent;
+  }
+  .site-nav a.active{color:var(--paper); border-color:var(--gold);}
+  .site-nav a:hover{color:var(--paper);}
+
+  /* ---------- Cover ---------- */
+  .cover{background:var(--teal); color:var(--paper); padding:44px 48px 36px; position:relative; overflow:hidden;}
+  .cover::after{content:""; position:absolute; right:-40px; top:-40px; width:220px; height:220px; border:1px solid rgba(251,250,246,0.14); border-radius:50%;}
+  .cover .eyebrow{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-soft); margin-bottom:14px;}
+  .cover h1{font-family:'Source Serif 4', serif; font-weight:600; font-size:34px; margin:0 0 8px; letter-spacing:-0.01em;}
+  .cover p{margin:0; max-width:520px; color:#D9E4E0; font-size:14.5px;}
+  .cover .folio{position:absolute; right:48px; bottom:36px; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--gold-soft); text-align:right; line-height:1.6;}
+
+  /* ---------- Calculator selector ---------- */
+  .selector{padding:30px 48px 0;}
+  .selector-label{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--gold); font-weight:600; margin-bottom:14px;
+  }
+  .calc-tabs{display:flex; flex-wrap:wrap; gap:8px;}
+  .calc-tab{position:relative;}
+  .calc-tab input{position:absolute; opacity:0; inset:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .calc-tab label{
+    display:block; padding:11px 18px; font-size:13px; font-weight:600; color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--radius); cursor:pointer; background:var(--paper);
+  }
+  .calc-tab input:checked + label{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .calc-tab input:focus-visible + label{outline:2px solid var(--gold); outline-offset:2px;}
+
+  /* ---------- Section shell ---------- */
+  .section{padding:32px 48px 40px;}
+  .section-head{display:flex; align-items:baseline; gap:14px; margin-bottom:8px;}
+  .section-head h2{font-family:'Source Serif 4', serif; font-weight:600; font-size:22px; margin:0; color:var(--ink);}
+  .section-sub{font-size:13px; color:var(--slate); margin:0 0 26px;}
+
+  .calc-panel{display:none; border-top:1px solid var(--line);}
+  .calc-panel.open{display:block; animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(-2px);} to{opacity:1; transform:translateY(0);}}
+
+  .field-row{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:18px;}
+  .field label{font-size:12.5px; font-weight:500; color:var(--slate); letter-spacing:.01em;}
+  .field .hint{font-size:11px; color:var(--slate); opacity:.8;}
+
+  input[type="number"], select{
+    font-family:'IBM Plex Sans', sans-serif; font-size:14px; padding:10px 12px;
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--paper);
+    color:var(--ink); width:100%;
+  }
+  input[type="number"]:focus, select:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(14,61,62,0.1);}
+  select{
+    appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8"><path d="M1 1l5 5 5-5" stroke="%235B6470" stroke-width="1.5" fill="none"/></svg>');
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:32px;
+  }
+  input[readonly]{background:var(--paper-shade); color:var(--slate); cursor:not-allowed;}
+
+  /* ---------- Segmented toggle ---------- */
+  .segmented{display:inline-flex; border:1px solid var(--ink); border-radius:var(--radius); overflow:hidden;}
+  .segmented label{
+    padding:8px 18px; font-size:13px; font-weight:500; cursor:pointer;
+    background:var(--paper); color:var(--ink); transition:background .15s, color .15s; user-select:none;
+  }
+  .segmented label:not(:last-child){border-right:1px solid var(--ink);}
+  .segmented input{position:absolute; opacity:0; pointer-events:none;}
+  .segmented input:checked + label{background:var(--ink); color:var(--paper);}
+  .segmented input:focus-visible + label{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .foir-note{font-size:11.5px; color:var(--slate); margin-top:4px;}
+  .foir-note.gap{color:var(--caution);}
+
+  /* ---------- Money preview ---------- */
+  .money-input-wrap{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .money-input-wrap input{flex:1 1 150px; min-width:120px;}
+  .money-preview{
+    display:none; font-family:'IBM Plex Mono', monospace; font-size:11px; line-height:1.4;
+    color:var(--gold); background:var(--gold-soft); padding:6px 10px; border-radius:var(--radius);
+    flex-shrink:0; max-width:220px;
+  }
+  .money-preview.show{display:inline-block;}
+
+  /* ---------- Results ---------- */
+  .result-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:12px; margin-top:8px;}
+  .result-card{background:var(--teal-dark); color:var(--paper); padding:18px 20px; border-radius:var(--radius);}
+  .result-card.highlight{background:var(--gold); color:var(--teal-dark);}
+  .result-card .rlabel{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:#9FB8B2; margin-bottom:8px;
+  }
+  .result-card.highlight .rlabel{color:var(--teal-dark); opacity:.65;}
+  .result-card .rvalue{font-family:'IBM Plex Mono', monospace; font-size:19px; font-weight:500;}
+  .status-pill{
+    display:inline-block; padding:4px 12px; border-radius:20px; font-size:11px;
+    font-family:'IBM Plex Mono', monospace; font-weight:600; margin-top:10px;
+  }
+  .status-good{background:var(--good-bg); color:var(--good);}
+  .status-caution{background:var(--caution-bg); color:var(--caution);}
+  .status-high{background:var(--high-bg); color:var(--danger);}
+
+  .calc-note{font-size:12.5px; color:var(--slate); margin-top:20px; line-height:1.6; padding-top:16px; border-top:1px dashed var(--line);}
+
+  .disclaimer{
+    padding:24px 48px 40px; font-size:12px; color:var(--slate); font-family:'IBM Plex Mono', monospace;
+    line-height:1.7; border-top:1px solid var(--line);
+  }
+
+  @media (max-width:600px){
+    .cover{padding:32px 22px 28px;}
+    .cover .folio{position:static; margin-top:18px; text-align:left;}
+    .selector{padding:24px 22px 0;}
+    .section{padding:26px 22px 32px;}
+    .field-row{grid-template-columns:1fr;}
+    .disclaimer{padding:20px 22px 32px;}
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="customer-details-form.html">Page 1 — Customer Details</a>
+    <a href="calculators.html" class="active">Page 2 — Calculators</a>
+    <a href="settings.html">Page 3 — Settings</a>
+  </div>
+</nav>
+
+<div class="doc">
+
+  <header class="cover">
+    <div class="eyebrow">Loan Origination · Financial Tools</div>
+    <h1>Calculators</h1>
+    <p>Estimate EMI, affordability, and eligibility before you apply. Every figure updates live as you type.</p>
+    <div class="folio">Page 2 of 3<br>Section B</div>
+  </header>
+
+  <div class="selector">
+    <div class="selector-label">Select a calculator</div>
+    <div class="calc-tabs" id="calcTabs">
+      <div class="calc-tab">
+        <input type="radio" name="calcSelect" id="tabEmi" value="emi" checked>
+        <label for="tabEmi">EMI Calculator</label>
+      </div>
+      <div class="calc-tab">
+        <input type="radio" name="calcSelect" id="tabFoir" value="foir">
+        <label for="tabFoir">FOIR Calculator</label>
+      </div>
+      <div class="calc-tab">
+        <input type="radio" name="calcSelect" id="tabElig" value="elig">
+        <label for="tabElig">Eligibility Calculator</label>
+      </div>
+      <div class="calc-tab">
+        <input type="radio" name="calcSelect" id="tabLtv" value="ltv">
+        <label for="tabLtv">LTV Calculator</label>
+      </div>
+      <div class="calc-tab">
+        <input type="radio" name="calcSelect" id="tabBt" value="bt">
+        <label for="tabBt">Balance Transfer Calculator</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMI CALCULATOR -->
+  <section class="section">
+    <div class="calc-panel open" id="panel-emi">
+      <div class="section-head"><h2>EMI Calculator</h2></div>
+      <div class="section-sub">Estimate the monthly instalment for a given loan amount, rate, and tenure.</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="emi-principal">Loan amount</label>
+          <div class="money-input-wrap">
+            <input type="number" id="emi-principal" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="emi-rate">Interest rate (% p.a.)</label>
+          <input type="number" id="emi-rate" min="0" step="0.05" class="calc-input">
+        </div>
+        <div class="field">
+          <label for="emi-tenure">Loan tenure (years)</label>
+          <input type="number" id="emi-tenure" min="0" step="1" class="calc-input">
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rlabel">Monthly EMI</div>
+          <div class="rvalue" id="emi-out-emi">—</div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">Total Interest Payable</div>
+          <div class="rvalue" id="emi-out-interest">—</div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">Total Payment</div>
+          <div class="rvalue" id="emi-out-total">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOIR CALCULATOR -->
+    <div class="calc-panel" id="panel-foir">
+      <div class="section-head"><h2>FOIR Calculator</h2></div>
+      <div class="section-sub">Fixed Obligation to Income Ratio — how much of monthly income goes toward loan obligations.</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="foir-income">Monthly net income</label>
+          <div class="money-input-wrap">
+            <input type="number" id="foir-income" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="foir-existing">Existing monthly obligations</label>
+          <div class="money-input-wrap">
+            <input type="number" id="foir-existing" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="foir-proposed">Proposed EMI (new loan)</label>
+          <div class="money-input-wrap">
+            <input type="number" id="foir-proposed" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rlabel">FOIR</div>
+          <div class="rvalue" id="foir-out-ratio">—</div>
+          <div id="foir-out-status"></div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">Total Monthly Obligations</div>
+          <div class="rvalue" id="foir-out-total">—</div>
+        </div>
+      </div>
+      <div class="calc-note">Lenders commonly use FOIR as a guideline — typically up to 40–50% depending on income band and policy. This is indicative only.</div>
+    </div>
+
+    <!-- ELIGIBILITY CALCULATOR -->
+    <div class="calc-panel" id="panel-elig">
+      <div class="section-head"><h2>Eligibility Calculator</h2></div>
+      <div class="section-sub">Estimate the maximum EMI and loan amount based on income and a target FOIR.</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="elig-income">Monthly net income</label>
+          <div class="money-input-wrap">
+            <input type="number" id="elig-income" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="elig-existing">Existing monthly obligations</label>
+          <div class="money-input-wrap">
+            <input type="number" id="elig-existing" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="elig-rate">Interest rate (% p.a.)</label>
+          <input type="number" id="elig-rate" min="0" step="0.05" class="calc-input">
+        </div>
+        <div class="field">
+          <label for="elig-tenure">Tenure (years)</label>
+          <input type="number" id="elig-tenure" min="0" step="1" class="calc-input">
+        </div>
+        <div class="field">
+          <label>FOIR source</label>
+          <div class="segmented">
+            <input type="radio" name="elig-foirsource" id="elig-foirsrc-profile" value="profile" checked>
+            <label for="elig-foirsrc-profile">Use Profile</label>
+            <input type="radio" name="elig-foirsource" id="elig-foirsrc-manual" value="manual">
+            <label for="elig-foirsrc-manual">Manual Entry</label>
+          </div>
+        </div>
+        <div class="field" id="elig-profile-field">
+          <label for="elig-profile">FOIR profile</label>
+          <select id="elig-profile" class="calc-input"></select>
+          <span class="hint">Managed on the <a href="settings.html" style="color:var(--teal);">Settings</a> page</span>
+        </div>
+        <div class="field">
+          <label for="elig-maxfoir">Max FOIR allowed (%)</label>
+          <input type="number" id="elig-maxfoir" min="0" max="100" step="1" value="50" class="calc-input" readonly>
+          <span class="foir-note" id="elig-foir-note">Select an income above</span>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rlabel">Max Eligible EMI</div>
+          <div class="rvalue" id="elig-out-emi">—</div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">Max Eligible Loan Amount</div>
+          <div class="rvalue" id="elig-out-loan">—</div>
+        </div>
+      </div>
+      <div class="calc-note">Estimate only — actual eligibility depends on lender policy, credit score, existing exposure, and documentation.</div>
+    </div>
+
+    <!-- LTV CALCULATOR -->
+    <div class="calc-panel" id="panel-ltv">
+      <div class="section-head"><h2>LTV Calculator</h2></div>
+      <div class="section-sub">Loan-to-Value — the loan amount as a percentage of the property's value.</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="ltv-property">Property value</label>
+          <div class="money-input-wrap">
+            <input type="number" id="ltv-property" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ltv-loan">Loan amount required</label>
+          <div class="money-input-wrap">
+            <input type="number" id="ltv-loan" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rlabel">LTV Ratio</div>
+          <div class="rvalue" id="ltv-out-ratio">—</div>
+          <div id="ltv-out-status"></div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">Minimum Down Payment</div>
+          <div class="rvalue" id="ltv-out-down">—</div>
+        </div>
+      </div>
+      <div class="calc-note">Many lenders cap LTV in the 75–90% range depending on loan quantum and property type. Confirm the applicable slab with your lender.</div>
+    </div>
+
+    <!-- BALANCE TRANSFER CALCULATOR -->
+    <div class="calc-panel" id="panel-bt">
+      <div class="section-head"><h2>Balance Transfer Calculator</h2></div>
+      <div class="section-sub">Compare your current loan against a transfer offer to see potential savings.</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="bt-outstanding">Existing outstanding amount</label>
+          <div class="money-input-wrap">
+            <input type="number" id="bt-outstanding" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="bt-currentrate">Current interest rate (% p.a.)</label>
+          <input type="number" id="bt-currentrate" min="0" step="0.05" class="calc-input">
+        </div>
+        <div class="field">
+          <label for="bt-tenure">Remaining tenure (years)</label>
+          <input type="number" id="bt-tenure" min="0" step="1" class="calc-input">
+        </div>
+        <div class="field">
+          <label for="bt-newrate">New offered rate (% p.a.)</label>
+          <input type="number" id="bt-newrate" min="0" step="0.05" class="calc-input">
+        </div>
+        <div class="field">
+          <label for="bt-fee">New loan processing fee</label>
+          <div class="money-input-wrap">
+            <input type="number" id="bt-fee" min="0" class="money-amount calc-input">
+            <span class="money-preview"></span>
+          </div>
+          <span class="hint">Optional — leave blank if none</span>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="rlabel">Current EMI</div>
+          <div class="rvalue" id="bt-out-currentemi">—</div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">New EMI</div>
+          <div class="rvalue" id="bt-out-newemi">—</div>
+        </div>
+        <div class="result-card highlight">
+          <div class="rlabel">Monthly Savings</div>
+          <div class="rvalue" id="bt-out-monthlysavings">—</div>
+        </div>
+        <div class="result-card">
+          <div class="rlabel">Net Total Savings (tenure)</div>
+          <div class="rvalue" id="bt-out-totalsavings">—</div>
+        </div>
+      </div>
+      <div class="calc-note">Net total savings = (monthly EMI saved × remaining months) − new loan processing fee. Excludes other transfer costs such as foreclosure charges, if applicable.</div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    These calculators provide indicative estimates for planning purposes only and do not constitute a loan offer. Actual EMI, eligibility, and terms are determined by the lender based on full underwriting.
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  // ---- Amount-in-words (Indian numbering system) ----
+  function numberToIndianWords(num){
+    num = Math.floor(Math.abs(Number(num)));
+    if (!isFinite(num)) return '';
+    if (num === 0) return 'Zero';
+    const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+      'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    function twoDigits(n){
+      if (n < 20) return ones[n];
+      return tens[Math.floor(n/10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    }
+    function threeDigits(n){
+      const h = Math.floor(n/100), r = n % 100;
+      let str = '';
+      if (h) str += ones[h] + ' Hundred';
+      if (r) str += (str ? ' ' : '') + twoDigits(r);
+      return str;
+    }
+    let n = num;
+    const crore = Math.floor(n / 1e7); n %= 1e7;
+    const lakh = Math.floor(n / 1e5); n %= 1e5;
+    const thousand = Math.floor(n / 1e3); n %= 1e3;
+    const rest = n;
+    const parts = [];
+    if (crore) parts.push(threeDigits(crore) + ' Crore' + (crore > 1 ? 's' : ''));
+    if (lakh) parts.push(threeDigits(lakh) + ' Lakh' + (lakh > 1 ? 's' : ''));
+    if (thousand) parts.push(threeDigits(thousand) + ' Thousand');
+    if (rest) parts.push(threeDigits(rest));
+    return parts.join(' ');
+  }
+
+  function formatMoneyPreview(value){
+    if (value === '' || value === null || value === undefined) return '';
+    const n = Number(value);
+    if (!isFinite(n) || n <= 0) return '';
+    return numberToIndianWords(n) + ' Rupees';
+  }
+
+  document.addEventListener('input', function(e){
+    if (e.target.classList && e.target.classList.contains('money-amount')){
+      const wrap = e.target.closest('.money-input-wrap');
+      const preview = wrap ? wrap.querySelector('.money-preview') : null;
+      if (preview){
+        const text = formatMoneyPreview(e.target.value);
+        preview.textContent = text;
+        preview.classList.toggle('show', !!text);
+      }
+    }
+  });
+
+  // ---- FOIR profile storage (shared with Settings page) ----
+  const FOIR_STORAGE_KEY = 'foirProfiles';
+
+  function uid(prefix){ return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function defaultFoirProfiles(){
+    return [{
+      id: 'profile-normal-salaried',
+      name: 'Normal Salaried',
+      slabs: [
+        { id: uid('slab'), min: 0,      max: 50000,  foir: 60 },
+        { id: uid('slab'), min: 50000,  max: 75000,  foir: 70 },
+        { id: uid('slab'), min: 75000,  max: 105000, foir: 75 },
+        { id: uid('slab'), min: 150000, max: null,   foir: 80 }
+      ]
+    }];
+  }
+
+  function loadFoirProfiles(){
+    try{
+      const raw = localStorage.getItem(FOIR_STORAGE_KEY);
+      if (!raw){ const d = defaultFoirProfiles(); localStorage.setItem(FOIR_STORAGE_KEY, JSON.stringify(d)); return d; }
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0){ const d = defaultFoirProfiles(); localStorage.setItem(FOIR_STORAGE_KEY, JSON.stringify(d)); return d; }
+      return parsed;
+    } catch(e){
+      const d = defaultFoirProfiles(); localStorage.setItem(FOIR_STORAGE_KEY, JSON.stringify(d)); return d;
+    }
+  }
+
+  function findSlabForIncome(profile, income){
+    if (!profile || !isFinite(income)) return null;
+    const slabs = [...profile.slabs].sort((a,b) => a.min - b.min);
+    let matched = slabs.find(s => income >= s.min && (s.max === null || income < s.max));
+    if (matched) return { slab: matched, gap: false };
+    const lower = slabs.filter(s => s.min <= income);
+    if (lower.length) return { slab: lower[lower.length - 1], gap: true };
+    return null;
+  }
+
+  function populateFoirProfileSelect(){
+    const select = document.getElementById('elig-profile');
+    if (!select) return;
+    const profiles = loadFoirProfiles();
+    select.innerHTML = profiles.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    const preferred = profiles.find(p => p.id === 'profile-normal-salaried');
+    if (preferred) select.value = preferred.id;
+  }
+  populateFoirProfileSelect();
+
+  function setFoirSourceUI(){
+    const useProfile = document.getElementById('elig-foirsrc-profile').checked;
+    document.getElementById('elig-profile-field').style.display = useProfile ? '' : 'none';
+    const foirInput = document.getElementById('elig-maxfoir');
+    if (useProfile){ foirInput.setAttribute('readonly', 'readonly'); }
+    else { foirInput.removeAttribute('readonly'); }
+  }
+  setFoirSourceUI();
+  document.getElementsByName('elig-foirsource').forEach(el => {
+    el.addEventListener('change', () => { setFoirSourceUI(); updateAll(); });
+  });
+
+  // ---- Tab switching ----
+  const panels = {
+    emi: document.getElementById('panel-emi'),
+    foir: document.getElementById('panel-foir'),
+    elig: document.getElementById('panel-elig'),
+    ltv: document.getElementById('panel-ltv'),
+    bt: document.getElementById('panel-bt')
+  };
+  document.getElementById('calcTabs').addEventListener('change', function(e){
+    if (e.target.name === 'calcSelect'){
+      Object.values(panels).forEach(p => p.classList.remove('open'));
+      panels[e.target.value].classList.add('open');
+    }
+  });
+
+  // ---- Calculation helpers ----
+  function num(id){
+    const el = document.getElementById(id);
+    if (!el) return NaN;
+    const v = el.value;
+    return v === '' ? NaN : Number(v);
+  }
+  function fmtINR(n){
+    if (!isFinite(n)) return '—';
+    return '₹ ' + Math.round(n).toLocaleString('en-IN');
+  }
+  function fmtNum(n){
+    if (!isFinite(n)) return '—';
+    return Math.round(n).toLocaleString('en-IN');
+  }
+  function fmtPct(n){
+    if (!isFinite(n)) return '—';
+    return n.toFixed(2) + '%';
+  }
+  function setText(id, text){ const el = document.getElementById(id); if (el) el.textContent = text; }
+
+  function emiAmount(P, annualRatePct, months){
+    if (!isFinite(P) || !isFinite(annualRatePct) || !isFinite(months) || P <= 0 || months <= 0) return NaN;
+    const r = annualRatePct / 12 / 100;
+    if (r === 0) return P / months;
+    const pow = Math.pow(1 + r, months);
+    return (P * r * pow) / (pow - 1);
+  }
+  function eligiblePrincipal(emi, annualRatePct, months){
+    if (!isFinite(emi) || !isFinite(annualRatePct) || !isFinite(months) || emi <= 0 || months <= 0) return NaN;
+    const r = annualRatePct / 12 / 100;
+    if (r === 0) return emi * months;
+    const pow = Math.pow(1 + r, months);
+    return (emi * (pow - 1)) / (r * pow);
+  }
+  function statusPill(label, cls){
+    return '<span class="status-pill status-' + cls + '">' + label + '</span>';
+  }
+
+  // ---- EMI Calculator ----
+  function updateEmi(){
+    const P = num('emi-principal'), rate = num('emi-rate'), years = num('emi-tenure');
+    const months = years * 12;
+    const emi = emiAmount(P, rate, months);
+    if (!isFinite(emi)){
+      setText('emi-out-emi', '—'); setText('emi-out-interest', '—'); setText('emi-out-total', '—');
+      return;
+    }
+    const total = emi * months;
+    const interest = total - P;
+    setText('emi-out-emi', fmtINR(emi));
+    setText('emi-out-interest', fmtINR(interest));
+    setText('emi-out-total', fmtINR(total));
+  }
+
+  // ---- FOIR Calculator ----
+  function updateFoir(){
+    const income = num('foir-income'), existing = num('foir-existing'), proposed = num('foir-proposed');
+    const statusEl = document.getElementById('foir-out-status');
+    if (!isFinite(income) || income <= 0){
+      setText('foir-out-ratio', '—'); setText('foir-out-total', '—'); statusEl.innerHTML = '';
+      return;
+    }
+    const existingSafe = isFinite(existing) ? existing : 0;
+    const proposedSafe = isFinite(proposed) ? proposed : 0;
+    const totalObligations = existingSafe + proposedSafe;
+    const ratio = (totalObligations / income) * 100;
+    setText('foir-out-ratio', fmtPct(ratio));
+    setText('foir-out-total', fmtINR(totalObligations));
+    if (ratio <= 40) statusEl.innerHTML = statusPill('Comfortable', 'good');
+    else if (ratio <= 50) statusEl.innerHTML = statusPill('Moderate', 'caution');
+    else statusEl.innerHTML = statusPill('Tight', 'high');
+  }
+
+  // ---- Eligibility Calculator ----
+  function updateElig(){
+    const income = num('elig-income'), existing = num('elig-existing');
+    const rate = num('elig-rate'), years = num('elig-tenure');
+    const months = years * 12;
+    const useProfile = document.getElementById('elig-foirsrc-profile').checked;
+    const foirInput = document.getElementById('elig-maxfoir');
+    const noteEl = document.getElementById('elig-foir-note');
+
+    if (useProfile){
+      if (!isFinite(income) || income <= 0){
+        foirInput.value = '';
+        noteEl.textContent = 'Enter monthly income to look up the FOIR slab';
+        noteEl.classList.remove('gap');
+      } else {
+        const profiles = loadFoirProfiles();
+        const profileId = document.getElementById('elig-profile').value;
+        const profile = profiles.find(p => p.id === profileId) || profiles[0];
+        const result = findSlabForIncome(profile, income);
+        if (result){
+          foirInput.value = result.slab.foir;
+          const rangeLabel = result.slab.max === null
+            ? `₹${fmtNum(result.slab.min)}+`
+            : `₹${fmtNum(result.slab.min)}–₹${fmtNum(result.slab.max)}`;
+          if (result.gap){
+            noteEl.textContent = `No exact slab for this income — using nearest slab (${rangeLabel}, ${result.slab.foir}%)`;
+            noteEl.classList.add('gap');
+          } else {
+            noteEl.textContent = `Matched slab: ${rangeLabel} → ${result.slab.foir}% FOIR`;
+            noteEl.classList.remove('gap');
+          }
+        } else {
+          foirInput.value = '';
+          noteEl.textContent = 'No slab configured below this income — add one in Settings';
+          noteEl.classList.add('gap');
+        }
+      }
+    } else {
+      noteEl.textContent = 'Manual entry — not tied to a profile';
+      noteEl.classList.remove('gap');
+    }
+
+    const maxFoir = num('elig-maxfoir');
+    if (!isFinite(income) || income <= 0 || !isFinite(maxFoir)){
+      setText('elig-out-emi', '—'); setText('elig-out-loan', '—');
+      return;
+    }
+    const existingSafe = isFinite(existing) ? existing : 0;
+    const maxEmi = Math.max(0, (income * maxFoir / 100) - existingSafe);
+    const maxLoan = eligiblePrincipal(maxEmi, rate, months);
+    setText('elig-out-emi', fmtINR(maxEmi));
+    setText('elig-out-loan', isFinite(maxLoan) ? fmtINR(maxLoan) : '—');
+  }
+
+  // ---- LTV Calculator ----
+  function updateLtv(){
+    const property = num('ltv-property'), loan = num('ltv-loan');
+    const statusEl = document.getElementById('ltv-out-status');
+    if (!isFinite(property) || property <= 0 || !isFinite(loan)){
+      setText('ltv-out-ratio', '—'); setText('ltv-out-down', '—'); statusEl.innerHTML = '';
+      return;
+    }
+    const ratio = (loan / property) * 100;
+    const down = property - loan;
+    setText('ltv-out-ratio', fmtPct(ratio));
+    setText('ltv-out-down', fmtINR(Math.max(0, down)));
+    if (ratio <= 75) statusEl.innerHTML = statusPill('Within typical range', 'good');
+    else if (ratio <= 90) statusEl.innerHTML = statusPill('Upper range', 'caution');
+    else statusEl.innerHTML = statusPill('Above typical caps', 'high');
+  }
+
+  // ---- Balance Transfer Calculator ----
+  function updateBt(){
+    const outstanding = num('bt-outstanding'), currentRate = num('bt-currentrate');
+    const years = num('bt-tenure'), newRate = num('bt-newrate'), fee = num('bt-fee');
+    const months = years * 12;
+    const currentEmi = emiAmount(outstanding, currentRate, months);
+    const newEmi = emiAmount(outstanding, newRate, months);
+    if (!isFinite(currentEmi) || !isFinite(newEmi)){
+      setText('bt-out-currentemi', '—'); setText('bt-out-newemi', '—');
+      setText('bt-out-monthlysavings', '—'); setText('bt-out-totalsavings', '—');
+      return;
+    }
+    const feeSafe = isFinite(fee) ? fee : 0;
+    const monthlySavings = currentEmi - newEmi;
+    const totalSavings = (monthlySavings * months) - feeSafe;
+    setText('bt-out-currentemi', fmtINR(currentEmi));
+    setText('bt-out-newemi', fmtINR(newEmi));
+    setText('bt-out-monthlysavings', fmtINR(monthlySavings));
+    setText('bt-out-totalsavings', fmtINR(totalSavings));
+  }
+
+  function updateAll(){ updateEmi(); updateFoir(); updateElig(); updateLtv(); updateBt(); }
+
+  document.addEventListener('input', function(e){
+    if (e.target.classList && e.target.classList.contains('calc-input')) updateAll();
+  });
+
+  updateAll();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

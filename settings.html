@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Loan Application</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E3D3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink:#14213D;
+    --teal:#0E3D3E;
+    --teal-dark:#0A2C2D;
+    --paper:#FBFAF6;
+    --paper-shade:#F1EFE7;
+    --gold:#B8863B;
+    --gold-soft:#EFE2C6;
+    --sage:#E7EEE8;
+    --slate:#5B6470;
+    --line:#D8D3C6;
+    --danger:#8C3B2E;
+    --good:#2C6B45;
+    --good-bg:#DCEFE1;
+    --caution:#8A6516;
+    --caution-bg:#F7E9C9;
+    --high-bg:#F4D9D2;
+    --radius:3px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .doc{max-width:860px; margin:0 auto; padding:0 0 80px;}
+
+  /* ---------- Site nav ---------- */
+  .site-nav{background:var(--teal-dark); border-bottom:1px solid rgba(251,250,246,0.12);}
+  .site-nav-inner{max-width:860px; margin:0 auto; display:flex;}
+  .site-nav a{
+    padding:13px 20px; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    letter-spacing:.06em; text-transform:uppercase; color:#9FB8B2; text-decoration:none;
+    border-bottom:2px solid transparent;
+  }
+  .site-nav a.active{color:var(--paper); border-color:var(--gold);}
+  .site-nav a:hover{color:var(--paper);}
+
+  /* ---------- Cover ---------- */
+  .cover{background:var(--teal); color:var(--paper); padding:44px 48px 36px; position:relative; overflow:hidden;}
+  .cover::after{content:""; position:absolute; right:-40px; top:-40px; width:220px; height:220px; border:1px solid rgba(251,250,246,0.14); border-radius:50%;}
+  .cover .eyebrow{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-soft); margin-bottom:14px;}
+  .cover h1{font-family:'Source Serif 4', serif; font-weight:600; font-size:34px; margin:0 0 8px; letter-spacing:-0.01em;}
+  .cover p{margin:0; max-width:520px; color:#D9E4E0; font-size:14.5px;}
+  .cover .folio{position:absolute; right:48px; bottom:36px; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--gold-soft); text-align:right; line-height:1.6;}
+  .cover .save-indicator{
+    position:absolute; left:48px; bottom:36px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--gold-soft);
+    opacity:0; transition:opacity .3s;
+  }
+  .cover .save-indicator.show{opacity:1;}
+
+  .section{padding:36px 48px 10px;}
+  .section-head{display:flex; align-items:baseline; gap:14px; margin-bottom:8px;}
+  .section-head h2{font-family:'Source Serif 4', serif; font-weight:600; font-size:21px; margin:0; color:var(--ink);}
+  .section-sub{font-size:13px; color:var(--slate); margin:0 0 26px;}
+
+  /* ---------- Profile cards ---------- */
+  .profile-card{
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px 24px; margin-bottom:20px; background:var(--paper);
+  }
+  .profile-card-head{display:flex; align-items:center; gap:12px; margin-bottom:16px; justify-content:space-between;}
+  .profile-name-input{
+    font-family:'Source Serif 4', serif; font-size:18px; font-weight:600;
+    border:none; border-bottom:1px solid transparent; background:transparent;
+    color:var(--ink); padding:4px 2px; flex:1; min-width:0;
+  }
+  .profile-name-input:focus{outline:none; border-bottom-color:var(--teal);}
+
+  .gap-warnings{margin-bottom:10px;}
+  .gap-warning{
+    font-size:11.5px; color:var(--caution); background:var(--caution-bg);
+    padding:8px 10px; border-radius:var(--radius); margin-bottom:8px;
+  }
+
+  .slab-table{width:100%; border-collapse:collapse; margin-bottom:14px;}
+  .slab-table th{
+    font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--slate); text-align:left; padding:6px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  .slab-table td{padding:6px 6px; border-bottom:1px solid var(--paper-shade); vertical-align:middle;}
+  .slab-table input[type="number"]{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; padding:7px 9px;
+    border:1px solid var(--line); border-radius:var(--radius); width:100%;
+    background:var(--paper); color:var(--ink);
+  }
+  .slab-table input[type="number"]:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(14,61,62,0.1);}
+  .slab-table input::placeholder{color:var(--slate); opacity:.6;}
+
+  .icon-btn{
+    background:none; border:none; cursor:pointer; color:var(--slate);
+    font-size:15px; padding:4px 9px; border-radius:var(--radius); line-height:1;
+  }
+  .icon-btn:hover{color:var(--danger); background:var(--high-bg);}
+
+  .btn-primary{
+    background:var(--teal); color:var(--paper); border:none; padding:11px 22px;
+    border-radius:var(--radius); font-family:'IBM Plex Mono', monospace; font-size:12.5px;
+    font-weight:600; letter-spacing:.03em; cursor:pointer;
+  }
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-primary:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .btn-ghost{
+    background:none; border:1px dashed var(--line); color:var(--slate);
+    padding:8px 16px; border-radius:var(--radius); font-size:12.5px;
+    font-family:'IBM Plex Mono', monospace; cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+  .btn-ghost:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .btn-danger-text{
+    background:none; border:none; color:var(--danger); font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px; cursor:pointer; text-decoration:underline; flex-shrink:0; white-space:nowrap;
+  }
+
+  .add-profile-row{padding:4px 48px 40px;}
+
+  .disclaimer{
+    padding:24px 48px 40px; font-size:12px; color:var(--slate); font-family:'IBM Plex Mono', monospace;
+    line-height:1.7; border-top:1px solid var(--line);
+  }
+
+  @media (max-width:600px){
+    .cover{padding:32px 22px 28px;}
+    .cover .folio{position:static; margin-top:18px; text-align:left;}
+    .cover .save-indicator{position:static; display:block; margin-top:6px;}
+    .section{padding:26px 22px 10px;}
+    .add-profile-row{padding:4px 22px 32px;}
+    .disclaimer{padding:20px 22px 32px;}
+    .slab-table{font-size:12px;}
+    .slab-table th:nth-child(2), .slab-table td:nth-child(2){display:none;}
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="customer-details-form.html">Page 1 — Customer Details</a>
+    <a href="calculators.html">Page 2 — Calculators</a>
+    <a href="settings.html" class="active">Page 3 — Settings</a>
+  </div>
+</nav>
+
+<div class="doc">
+
+  <header class="cover">
+    <div class="eyebrow">Loan Origination · Configuration</div>
+    <h1>Settings</h1>
+    <p>Manage FOIR profiles and salary slabs used by the Eligibility Calculator on Page 2. Changes save automatically to this device.</p>
+    <span class="save-indicator" id="saveIndicator">Saved ✓</span>
+    <div class="folio">Page 3 of 3<br>Section C</div>
+  </header>
+
+  <section class="section">
+    <div class="section-head"><h2>FOIR Profiles</h2></div>
+    <div class="section-sub">Each profile defines income slabs and the FOIR % allowed at each slab. The Eligibility Calculator looks up the matching slab from the selected profile and applicant income.</div>
+
+    <div id="profilesContainer"></div>
+  </section>
+
+  <div class="add-profile-row">
+    <button type="button" class="btn-primary" id="addProfileBtn">+ New Profile</button>
+  </div>
+
+  <div class="disclaimer">
+    Stored locally in this browser (localStorage) — profiles are not sent anywhere and are specific to this device/browser. Clearing site data will reset profiles to default.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'foirProfiles';
+
+  function uid(prefix){ return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function defaultProfiles(){
+    return [{
+      id: 'profile-normal-salaried',
+      name: 'Normal Salaried',
+      slabs: [
+        { id: uid('slab'), min: 0,      max: 50000,  foir: 60 },
+        { id: uid('slab'), min: 50000,  max: 75000,  foir: 70 },
+        { id: uid('slab'), min: 75000,  max: 105000, foir: 75 },
+        { id: uid('slab'), min: 150000, max: null,   foir: 80 }
+      ]
+    }];
+  }
+
+  function loadProfiles(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw){ const d = defaultProfiles(); save(d); return d; }
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0){ const d = defaultProfiles(); save(d); return d; }
+      return parsed;
+    } catch(e){
+      const d = defaultProfiles(); save(d); return d;
+    }
+  }
+  function save(profiles){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+  }
+
+  let profiles = loadProfiles();
+
+  function fmtShort(n){
+    if (n === null || n === undefined || !isFinite(n)) return '—';
+    return Number(n).toLocaleString('en-IN');
+  }
+
+  function persist(){
+    save(profiles);
+    flashSaved();
+  }
+  let flashTimer = null;
+  function flashSaved(){
+    const el = document.getElementById('saveIndicator');
+    el.classList.add('show');
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => el.classList.remove('show'), 1200);
+  }
+
+  function renderWarnings(profile){
+    const el = document.querySelector(`.gap-warnings[data-for="${profile.id}"]`);
+    if (!el) return;
+    const sorted = [...profile.slabs].sort((a,b) => a.min - b.min);
+    let html = '';
+    for (let i = 0; i < sorted.length - 1; i++){
+      const cur = sorted[i], next = sorted[i+1];
+      if (cur.max !== null && cur.max < next.min){
+        html += `<div class="gap-warning">⚠ Gap: income between ₹${fmtShort(cur.max)} and ₹${fmtShort(next.min)} has no slab assigned — the calculator will fall back to the nearest lower slab.</div>`;
+      } else if (cur.max !== null && cur.max > next.min){
+        html += `<div class="gap-warning">⚠ Overlap: slabs around ₹${fmtShort(next.min)} overlap — the lower slab's income threshold takes priority.</div>`;
+      }
+    }
+    el.innerHTML = html;
+  }
+
+  function renderProfileCard(profile){
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    card.dataset.profileId = profile.id;
+
+    const head = document.createElement('div');
+    head.className = 'profile-card-head';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'profile-name-input';
+    nameInput.value = profile.name;
+    nameInput.setAttribute('aria-label', 'Profile name');
+    nameInput.addEventListener('input', () => { profile.name = nameInput.value; persist(); });
+    head.appendChild(nameInput);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'btn-danger-text';
+    delBtn.textContent = 'Delete profile';
+    delBtn.addEventListener('click', () => {
+      if (confirm(`Delete profile "${profile.name}"? This cannot be undone.`)){
+        profiles = profiles.filter(p => p.id !== profile.id);
+        persist();
+        render();
+      }
+    });
+    head.appendChild(delBtn);
+    card.appendChild(head);
+
+    const warnings = document.createElement('div');
+    warnings.className = 'gap-warnings';
+    warnings.dataset.for = profile.id;
+    card.appendChild(warnings);
+
+    const table = document.createElement('table');
+    table.className = 'slab-table';
+    table.innerHTML = '<thead><tr><th>Min Income (₹)</th><th>Max Income (₹)</th><th>FOIR %</th><th></th></tr></thead>';
+    const tbody = document.createElement('tbody');
+
+    profile.slabs.forEach(slab => {
+      const tr = document.createElement('tr');
+
+      const minTd = document.createElement('td');
+      const minInput = document.createElement('input');
+      minInput.type = 'number'; minInput.min = '0'; minInput.value = slab.min;
+      minInput.setAttribute('aria-label', 'Minimum income');
+      minInput.addEventListener('input', () => { slab.min = minInput.value === '' ? 0 : Number(minInput.value); persist(); renderWarnings(profile); });
+      minTd.appendChild(minInput);
+
+      const maxTd = document.createElement('td');
+      const maxInput = document.createElement('input');
+      maxInput.type = 'number'; maxInput.min = '0'; maxInput.placeholder = 'No limit';
+      maxInput.value = slab.max === null ? '' : slab.max;
+      maxInput.setAttribute('aria-label', 'Maximum income');
+      maxInput.addEventListener('input', () => { slab.max = maxInput.value === '' ? null : Number(maxInput.value); persist(); renderWarnings(profile); });
+      maxTd.appendChild(maxInput);
+
+      const foirTd = document.createElement('td');
+      const foirInput = document.createElement('input');
+      foirInput.type = 'number'; foirInput.min = '0'; foirInput.max = '100'; foirInput.value = slab.foir;
+      foirInput.setAttribute('aria-label', 'FOIR percent');
+      foirInput.addEventListener('input', () => { slab.foir = foirInput.value === '' ? 0 : Number(foirInput.value); persist(); });
+      foirTd.appendChild(foirInput);
+
+      const delTd = document.createElement('td');
+      const slabDelBtn = document.createElement('button');
+      slabDelBtn.type = 'button'; slabDelBtn.className = 'icon-btn'; slabDelBtn.title = 'Remove slab';
+      slabDelBtn.textContent = '✕';
+      slabDelBtn.addEventListener('click', () => {
+        profile.slabs = profile.slabs.filter(s => s.id !== slab.id);
+        persist();
+        render();
+      });
+      delTd.appendChild(slabDelBtn);
+
+      tr.appendChild(minTd); tr.appendChild(maxTd); tr.appendChild(foirTd); tr.appendChild(delTd);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    card.appendChild(table);
+
+    const addSlabBtn = document.createElement('button');
+    addSlabBtn.type = 'button'; addSlabBtn.className = 'btn-ghost'; addSlabBtn.textContent = '+ Add Slab';
+    addSlabBtn.addEventListener('click', () => {
+      const lastMax = profile.slabs.length ? profile.slabs[profile.slabs.length - 1].max : 0;
+      profile.slabs.push({ id: uid('slab'), min: lastMax || 0, max: null, foir: 50 });
+      persist();
+      render();
+    });
+    card.appendChild(addSlabBtn);
+
+    return card;
+  }
+
+  function render(){
+    const container = document.getElementById('profilesContainer');
+    container.innerHTML = '';
+    profiles.forEach(profile => {
+      container.appendChild(renderProfileCard(profile));
+      renderWarnings(profile);
+    });
+  }
+
+  document.getElementById('addProfileBtn').addEventListener('click', () => {
+    profiles.push({
+      id: uid('profile'),
+      name: 'New Profile',
+      slabs: [{ id: uid('slab'), min: 0, max: null, foir: 50 }]
+    });
+    persist();
+    render();
+  });
+
+  render();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

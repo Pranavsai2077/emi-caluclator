@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Details — Loan Application</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E3D3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink:#14213D;
+    --teal:#0E3D3E;
+    --teal-dark:#0A2C2D;
+    --paper:#FBFAF6;
+    --paper-shade:#F1EFE7;
+    --gold:#B8863B;
+    --gold-soft:#EFE2C6;
+    --sage:#E7EEE8;
+    --slate:#5B6470;
+    --line:#D8D3C6;
+    --danger:#8C3B2E;
+    --radius:3px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .doc{
+    max-width:860px;
+    margin:0 auto;
+    padding:0 0 80px;
+  }
+
+  /* ---------- Header (ledger cover) ---------- */
+  .cover{
+    background:var(--teal);
+    color:var(--paper);
+    padding:44px 48px 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  .cover::after{
+    content:"";
+    position:absolute; right:-40px; top:-40px;
+    width:220px; height:220px;
+    border:1px solid rgba(251,250,246,0.14);
+    border-radius:50%;
+  }
+  .cover .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin-bottom:14px;
+  }
+  .cover h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:34px;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .cover p{
+    margin:0;
+    max-width:520px;
+    color:#D9E4E0;
+    font-size:14.5px;
+  }
+  .cover .folio{
+    position:absolute; right:48px; bottom:36px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--gold-soft);
+    text-align:right;
+    line-height:1.6;
+  }
+
+  /* ---------- Section shell ---------- */
+  .section{
+    border-bottom:1px solid var(--line);
+    padding:36px 48px;
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .section-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    border-radius:50%;
+    width:26px; height:26px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .section-head h2{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:21px;
+    margin:0;
+    color:var(--ink);
+  }
+  .section-sub{
+    font-size:13px;
+    color:var(--slate);
+    margin:-14px 0 22px 40px;
+  }
+
+  .block{
+    margin-bottom:26px;
+  }
+  .block:last-child{margin-bottom:0;}
+  .block-label{
+    font-weight:600;
+    font-size:13.5px;
+    margin-bottom:10px;
+    display:block;
+    color:var(--ink);
+  }
+
+  /* ---------- Segmented Yes/No ---------- */
+  .segmented{
+    display:inline-flex;
+    border:1px solid var(--ink);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .segmented label{
+    padding:8px 22px;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+    background:var(--paper);
+    color:var(--ink);
+    transition:background .15s, color .15s;
+    user-select:none;
+  }
+  .segmented label:not(:last-child){border-right:1px solid var(--ink);}
+  .segmented input{position:absolute; opacity:0; pointer-events:none;}
+  .segmented input:checked + label{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .segmented input:focus-visible + label{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  /* ---------- Card radio grid (product / employment) ---------- */
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:10px;
+  }
+  .card-grid.two{grid-template-columns:repeat(2, minmax(0,1fr));}
+  .card{
+    position:relative;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--paper);
+  }
+  .card input{position:absolute; opacity:0; inset:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .card label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 14px;
+    font-size:13.5px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .card .dot{
+    width:15px; height:15px;
+    border-radius:50%;
+    border:1.5px solid var(--slate);
+    flex-shrink:0;
+    position:relative;
+  }
+  .card input:checked ~ label{
+    background:var(--sage);
+    border-color:var(--teal);
+  }
+  .card:has(input:checked){border-color:var(--teal);}
+  .card input:checked ~ label .dot{border-color:var(--teal);}
+  .card input:checked ~ label .dot::after{
+    content:"";
+    position:absolute; inset:3px;
+    border-radius:50%;
+    background:var(--teal);
+  }
+  .card input:focus-visible ~ label{outline:2px solid var(--gold); outline-offset:-2px;}
+
+  .card.big label{padding:18px 16px; font-weight:600; font-size:14.5px;}
+
+  /* ---------- Fields ---------- */
+  .field-row{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:16px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .field label{
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--slate);
+    letter-spacing:.01em;
+  }
+  input[type="text"], input[type="number"], select{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--paper);
+    color:var(--ink);
+    width:100%;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus{
+    outline:none;
+    border-color:var(--teal);
+    box-shadow:0 0 0 3px rgba(14,61,62,0.1);
+  }
+  select{appearance:none; background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8"><path d="M1 1l5 5 5-5" stroke="%235B6470" stroke-width="1.5" fill="none"/></svg>'); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px;}
+
+  .reveal{
+    margin-top:14px;
+    padding-left:16px;
+    border-left:2px solid var(--gold-soft);
+    display:none;
+  }
+  .reveal.open{display:block; animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(-2px);} to{opacity:1; transform:translateY(0);}}
+
+  .subfield-stack > .field{margin-bottom:14px;}
+  .subfield-stack > .field:last-child{margin-bottom:0;}
+
+  /* ---------- Employment tabs ---------- */
+  .emp-tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:22px;
+    border-bottom:1px solid var(--line);
+  }
+  .emp-tab{position:relative;}
+  .emp-tab input{position:absolute; opacity:0;}
+  .emp-tab label{
+    display:block;
+    padding:10px 4px 12px;
+    margin-right:22px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--slate);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .emp-tab input:checked + label{color:var(--teal); border-color:var(--gold);}
+  .emp-tab input:focus-visible + label{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .emp-panel{display:none;}
+  .emp-panel.open{display:block; animation:fade .2s ease;}
+
+  .subhead{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--gold);
+    font-weight:600;
+    margin:22px 0 12px;
+  }
+  .subhead:first-child{margin-top:0;}
+
+  /* ---------- Summary ---------- */
+  .summary-wrap{
+    background:var(--teal-dark);
+    padding:36px 48px 44px;
+  }
+  .summary-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .summary-head h2{
+    font-family:'Source Serif 4', serif;
+    color:var(--paper);
+    font-size:20px;
+    margin:0;
+    font-weight:600;
+  }
+  .copy-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.04em;
+    background:var(--gold);
+    color:var(--teal-dark);
+    border:none;
+    padding:10px 20px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-weight:600;
+    transition:background .15s, transform .1s;
+  }
+  .copy-btn:hover{background:#CB9A50;}
+  .copy-btn:active{transform:scale(0.97);}
+  .copy-btn:focus-visible{outline:2px solid var(--paper); outline-offset:2px;}
+  .copy-btn.copied{background:#5B8A6B; color:#fff;}
+
+  #summaryBox{
+    width:100%;
+    min-height:280px;
+    resize:vertical;
+    background:#0C3435;
+    color:#E6EFE9;
+    border:1px solid rgba(251,250,246,0.16);
+    border-radius:var(--radius);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.8px;
+    line-height:1.7;
+    padding:20px;
+    white-space:pre-wrap;
+  }
+  #summaryBox:focus{outline:none; border-color:var(--gold);}
+
+  .empty-note{
+    font-size:12px;
+    color:#9FB8B2;
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Site nav ---------- */
+  .site-nav{
+    background:var(--teal-dark);
+    border-bottom:1px solid rgba(251,250,246,0.12);
+  }
+  .site-nav-inner{
+    max-width:860px;
+    margin:0 auto;
+    display:flex;
+  }
+  .site-nav a{
+    padding:13px 20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#9FB8B2;
+    text-decoration:none;
+    border-bottom:2px solid transparent;
+  }
+  .site-nav a.active{color:var(--paper); border-color:var(--gold);}
+  .site-nav a:hover{color:var(--paper);}
+
+  /* ---------- Money preview ---------- */
+  .money-input-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .money-input-wrap input{flex:1 1 150px; min-width:120px;}
+  .money-preview{
+    display:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    line-height:1.4;
+    color:var(--gold);
+    background:var(--gold-soft);
+    padding:6px 10px;
+    border-radius:var(--radius);
+    flex-shrink:0;
+    max-width:220px;
+  }
+  .money-preview.show{display:inline-block;}
+
+  @media (max-width:600px){
+    .cover{padding:32px 22px 28px;}
+    .cover .folio{position:static; margin-top:18px; text-align:left;}
+    .section{padding:28px 22px;}
+    .summary-wrap{padding:28px 22px 32px;}
+    .field-row{grid-template-columns:1fr;}
+    .card-grid.two{grid-template-columns:1fr;}
+    .section-sub{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="customer-details-form.html" class="active">Page 1 — Customer Details</a>
+    <a href="calculators.html">Page 2 — Calculators</a>
+    <a href="settings.html">Page 3 — Settings</a>
+  </div>
+</nav>
+<div class="doc">
+
+  <header class="cover">
+    <div class="eyebrow">Loan Origination · Intake Form</div>
+    <h1>Customer Details</h1>
+    <p>Applicant and co-applicant profile, product selection, and financial standing. Fields adjust automatically based on your answers.</p>
+    <div class="folio">Page 1 of 3<br>Section A</div>
+  </header>
+
+  <form id="detailsForm">
+
+    <!-- 1. NRI STATUS -->
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">1</span>
+        <h2>NRI Status</h2>
+      </div>
+      <div class="section-sub">Non-Resident Indian status for applicant and co-applicant, if any.</div>
+
+      <div class="block">
+        <span class="block-label">Applicant — NRI Status</span>
+        <div class="segmented" data-group="appNri">
+          <input type="radio" name="appNri" id="appNriYes" value="Yes">
+          <label for="appNriYes">Yes</label>
+          <input type="radio" name="appNri" id="appNriNo" value="No" checked>
+          <label for="appNriNo">No</label>
+        </div>
+        <div class="reveal" id="appNriCountryWrap">
+          <div class="subfield-stack">
+            <div class="field">
+              <label for="appNriCountry">Select country</label>
+              <select id="appNriCountry" name="appNriCountry">
+                <option value="">— Choose —</option>
+                <option value="USA">USA</option>
+                <option value="Canada">Canada</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field reveal" id="appNriOtherWrap">
+              <label for="appNriOther">Country name</label>
+              <input type="text" id="appNriOther" name="appNriOther" placeholder="Enter country name">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <span class="block-label">Co-Applicant — NRI Status</span>
+        <div class="segmented" data-group="coNri">
+          <input type="radio" name="coNri" id="coNriYes" value="Yes">
+          <label for="coNriYes">Yes</label>
+          <input type="radio" name="coNri" id="coNriNo" value="No" checked>
+          <label for="coNriNo">No</label>
+        </div>
+        <div class="reveal" id="coNriCountryWrap">
+          <div class="subfield-stack">
+            <div class="field">
+              <label for="coNriCountry">Select country</label>
+              <select id="coNriCountry" name="coNriCountry">
+                <option value="">— Choose —</option>
+                <option value="USA">USA</option>
+                <option value="Canada">Canada</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field reveal" id="coNriOtherWrap">
+              <label for="coNriOther">Country name</label>
+              <input type="text" id="coNriOther" name="coNriOther" placeholder="Enter country name">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PRODUCT SELECTION -->
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">2</span>
+        <h2>Product Selection</h2>
+      </div>
+      <div class="section-sub">Choose one product type. Available purposes will update below.</div>
+
+      <div class="block">
+        <span class="block-label">Product Type</span>
+        <div class="card-grid two" id="productTypeGrid">
+          <div class="card big">
+            <input type="radio" name="productType" id="ptHome" value="Home Loan">
+            <label for="ptHome"><span class="dot"></span>Home Loan</label>
+          </div>
+          <div class="card big">
+            <input type="radio" name="productType" id="ptLap" value="LAP (Loan Against Property)">
+            <label for="ptLap"><span class="dot"></span>LAP (Loan Against Property)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="block reveal" id="homeLoanWrap">
+        <span class="block-label">Purpose — Home Loan</span>
+        <div class="card-grid" id="homeLoanOptions"></div>
+      </div>
+
+      <div class="block reveal" id="lapWrap">
+        <span class="block-label">Purpose — LAP</span>
+        <div class="card-grid" id="lapOptions"></div>
+      </div>
+    </section>
+
+    <!-- 3. EMPLOYMENT & FINANCIAL PROFILE -->
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">3</span>
+        <h2>Employment &amp; Financial Profile</h2>
+      </div>
+      <div class="section-sub">Select the applicable employment category.</div>
+
+      <div class="emp-tabs" id="empTabs">
+        <div class="emp-tab">
+          <input type="radio" name="empCategory" id="empSalaried" value="Salaried Individual" checked>
+          <label for="empSalaried">Salaried Individual</label>
+        </div>
+        <div class="emp-tab">
+          <input type="radio" name="empCategory" id="empSEP" value="Self-Employed Professional (SEP)">
+          <label for="empSEP">Self-Employed Professional</label>
+        </div>
+        <div class="emp-tab">
+          <input type="radio" name="empCategory" id="empSENP" value="Self-Employed Non-Professional (SENP)">
+          <label for="empSENP">Self-Employed Non-Professional</label>
+        </div>
+      </div>
+
+      <!-- Salaried panel -->
+      <div class="emp-panel open" id="panel-salaried" data-prefix="sal">
+        <div class="field-row">
+          <div class="field"><label for="sal-name">Full name</label><input type="text" id="sal-name" name="sal-name"></div>
+          <div class="field"><label for="sal-age">Age</label><input type="number" id="sal-age" name="sal-age" min="18" max="75"></div>
+          <div class="field"><label for="sal-cibil">CIBIL rating</label><input type="number" id="sal-cibil" name="sal-cibil" min="300" max="900"></div>
+          <div class="field">
+            <label for="sal-salary">Monthly salary</label>
+            <div class="money-input-wrap">
+              <input type="number" id="sal-salary" name="sal-salary" min="0" class="money-amount">
+              <span class="money-preview"></span>
+            </div>
+          </div>
+          <div class="field"><label for="sal-exp">Work experience — current company (yrs)</label><input type="number" id="sal-exp" name="sal-exp" min="0" step="0.5"></div>
+        </div>
+
+        <div class="subhead">Existing Loan Details</div>
+        <div class="block">
+          <span class="block-label">Existing / pending loans?</span>
+          <div class="segmented" data-group="sal-hasLoans">
+            <input type="radio" name="sal-hasLoans" id="sal-loansYes" value="Yes"><label for="sal-loansYes">Yes</label>
+            <input type="radio" name="sal-hasLoans" id="sal-loansNo" value="No" checked><label for="sal-loansNo">No</label>
+          </div>
+          <div class="reveal" id="sal-loansDetail">
+            <div class="field-row">
+              <div class="field"><label for="sal-numLoans">Number of active loans</label><input type="number" id="sal-numLoans" name="sal-numLoans" min="0"></div>
+              <div class="field">
+                <label for="sal-outstanding">Total outstanding amount</label>
+                <div class="money-input-wrap">
+                  <input type="number" id="sal-outstanding" name="sal-outstanding" min="0" class="money-amount">
+                  <span class="money-preview"></span>
+                </div>
+              </div>
+            </div>
+            <div class="block" style="margin-top:14px;">
+              <span class="block-label">History of late payments?</span>
+              <div class="segmented" data-group="sal-latePay">
+                <input type="radio" name="sal-latePay" id="sal-lateYes" value="Yes"><label for="sal-lateYes">Yes</label>
+                <input type="radio" name="sal-latePay" id="sal-lateNo" value="No" checked><label for="sal-lateNo">No</label>
+              </div>
+              <div class="reveal" id="sal-lateDetail">
+                <div class="field"><label for="sal-numLate">Number of late payments</label><input type="number" id="sal-numLate" name="sal-numLate" min="0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEP panel -->
+      <div class="emp-panel" id="panel-sep" data-prefix="sep">
+        <div class="field-row">
+          <div class="field"><label for="sep-name">Full name</label><input type="text" id="sep-name" name="sep-name"></div>
+          <div class="field"><label for="sep-age">Age</label><input type="number" id="sep-age" name="sep-age" min="18" max="75"></div>
+          <div class="field"><label for="sep-cibil">CIBIL rating</label><input type="number" id="sep-cibil" name="sep-cibil" min="300" max="900"></div>
+          <div class="field">
+            <label for="sep-income">Gross annual income / salary</label>
+            <div class="money-input-wrap">
+              <input type="number" id="sep-income" name="sep-income" min="0" class="money-amount">
+              <span class="money-preview"></span>
+            </div>
+          </div>
+          <div class="field"><label for="sep-vintage">Business vintage / experience (yrs)</label><input type="number" id="sep-vintage" name="sep-vintage" min="0" step="0.5"></div>
+        </div>
+
+        <div class="subhead">Existing Loan Details</div>
+        <div class="block">
+          <span class="block-label">Existing / pending loans?</span>
+          <div class="segmented" data-group="sep-hasLoans">
+            <input type="radio" name="sep-hasLoans" id="sep-loansYes" value="Yes"><label for="sep-loansYes">Yes</label>
+            <input type="radio" name="sep-hasLoans" id="sep-loansNo" value="No" checked><label for="sep-loansNo">No</label>
+          </div>
+          <div class="reveal" id="sep-loansDetail">
+            <div class="field-row">
+              <div class="field"><label for="sep-numLoans">Number of active loans</label><input type="number" id="sep-numLoans" name="sep-numLoans" min="0"></div>
+              <div class="field">
+                <label for="sep-outstanding">Total outstanding amount</label>
+                <div class="money-input-wrap">
+                  <input type="number" id="sep-outstanding" name="sep-outstanding" min="0" class="money-amount">
+                  <span class="money-preview"></span>
+                </div>
+              </div>
+            </div>
+            <div class="block" style="margin-top:14px;">
+              <span class="block-label">History of late payments?</span>
+              <div class="segmented" data-group="sep-latePay">
+                <input type="radio" name="sep-latePay" id="sep-lateYes" value="Yes"><label for="sep-lateYes">Yes</label>
+                <input type="radio" name="sep-latePay" id="sep-lateNo" value="No" checked><label for="sep-lateNo">No</label>
+              </div>
+              <div class="reveal" id="sep-lateDetail">
+                <div class="field"><label for="sep-numLate">Number of late payments</label><input type="number" id="sep-numLate" name="sep-numLate" min="0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SENP panel -->
+      <div class="emp-panel" id="panel-senp" data-prefix="senp">
+        <div class="field-row">
+          <div class="field"><label for="senp-name">Full name</label><input type="text" id="senp-name" name="senp-name"></div>
+          <div class="field"><label for="senp-age">Age</label><input type="number" id="senp-age" name="senp-age" min="18" max="75"></div>
+          <div class="field"><label for="senp-cibil">CIBIL rating</label><input type="number" id="senp-cibil" name="senp-cibil" min="300" max="900"></div>
+          <div class="field">
+            <label for="senp-income">Gross annual income / salary</label>
+            <div class="money-input-wrap">
+              <input type="number" id="senp-income" name="senp-income" min="0" class="money-amount">
+              <span class="money-preview"></span>
+            </div>
+          </div>
+          <div class="field"><label for="senp-vintage">Business vintage / experience (yrs)</label><input type="number" id="senp-vintage" name="senp-vintage" min="0" step="0.5"></div>
+        </div>
+
+        <div class="subhead">Existing Loan Details</div>
+        <div class="block">
+          <span class="block-label">Existing / pending loans?</span>
+          <div class="segmented" data-group="senp-hasLoans">
+            <input type="radio" name="senp-hasLoans" id="senp-loansYes" value="Yes"><label for="senp-loansYes">Yes</label>
+            <input type="radio" name="senp-hasLoans" id="senp-loansNo" value="No" checked><label for="senp-loansNo">No</label>
+          </div>
+          <div class="reveal" id="senp-loansDetail">
+            <div class="field-row">
+              <div class="field"><label for="senp-numLoans">Number of active loans</label><input type="number" id="senp-numLoans" name="senp-numLoans" min="0"></div>
+              <div class="field">
+                <label for="senp-outstanding">Total outstanding amount</label>
+                <div class="money-input-wrap">
+                  <input type="number" id="senp-outstanding" name="senp-outstanding" min="0" class="money-amount">
+                  <span class="money-preview"></span>
+                </div>
+              </div>
+            </div>
+            <div class="block" style="margin-top:14px;">
+              <span class="block-label">History of late payments?</span>
+              <div class="segmented" data-group="senp-latePay">
+                <input type="radio" name="senp-latePay" id="senp-lateYes" value="Yes"><label for="senp-lateYes">Yes</label>
+                <input type="radio" name="senp-latePay" id="senp-lateNo" value="No" checked><label for="senp-lateNo">No</label>
+              </div>
+              <div class="reveal" id="senp-lateDetail">
+                <div class="field"><label for="senp-numLate">Number of late payments</label><input type="number" id="senp-numLate" name="senp-numLate" min="0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </form>
+
+  <!-- 4. SUMMARY -->
+  <section class="summary-wrap">
+    <div class="summary-head">
+      <h2>4 · Auto-Generated Summary</h2>
+      <button type="button" class="copy-btn" id="copyBtn">Copy Full Text</button>
+    </div>
+    <textarea id="summaryBox" readonly></textarea>
+    <div class="empty-note">Updates automatically as fields are completed above.</div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const form = document.getElementById('detailsForm');
+
+  // ---- Amount-in-words (Indian numbering system) ----
+  function numberToIndianWords(num){
+    num = Math.floor(Math.abs(Number(num)));
+    if (!isFinite(num)) return '';
+    if (num === 0) return 'Zero';
+    const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+      'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    function twoDigits(n){
+      if (n < 20) return ones[n];
+      return tens[Math.floor(n/10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    }
+    function threeDigits(n){
+      const h = Math.floor(n/100), r = n % 100;
+      let str = '';
+      if (h) str += ones[h] + ' Hundred';
+      if (r) str += (str ? ' ' : '') + twoDigits(r);
+      return str;
+    }
+    let n = num;
+    const crore = Math.floor(n / 1e7); n %= 1e7;
+    const lakh = Math.floor(n / 1e5); n %= 1e5;
+    const thousand = Math.floor(n / 1e3); n %= 1e3;
+    const rest = n;
+    const parts = [];
+    if (crore) parts.push(threeDigits(crore) + ' Crore' + (crore > 1 ? 's' : ''));
+    if (lakh) parts.push(threeDigits(lakh) + ' Lakh' + (lakh > 1 ? 's' : ''));
+    if (thousand) parts.push(threeDigits(thousand) + ' Thousand');
+    if (rest) parts.push(threeDigits(rest));
+    return parts.join(' ');
+  }
+
+  function formatMoneyPreview(value){
+    if (value === '' || value === null || value === undefined) return '';
+    const n = Number(value);
+    if (!isFinite(n) || n <= 0) return '';
+    return numberToIndianWords(n) + ' Rupees';
+  }
+
+  document.addEventListener('input', function(e){
+    if (e.target.classList && e.target.classList.contains('money-amount')){
+      const wrap = e.target.closest('.money-input-wrap');
+      const preview = wrap ? wrap.querySelector('.money-preview') : null;
+      if (preview){
+        const text = formatMoneyPreview(e.target.value);
+        preview.textContent = text;
+        preview.classList.toggle('show', !!text);
+      }
+    }
+  });
+
+  const HOME_LOAN_OPTIONS = [
+    "Purchase of a New/Old House or Flat",
+    "Purchase of a Plot and Construction of a House",
+    "Construction on an Already-Owned Plot",
+    "Extension / Renovation / Repair of an Existing House",
+    "Refinance",
+    "Top-up Loan",
+    "Balance Transfer",
+    "Home Décor (Furnishing & Interior Designing)"
+  ];
+
+  const LAP_OPTIONS = [
+    "Residential – Self-Occupied",
+    "Residential – Rented",
+    "Residential – Vacant",
+    "Commercial – Self-Occupied",
+    "Commercial – Rented",
+    "Non-Residential Purchase",
+    "LAP Against Industrial Property",
+    "LAP Against Industrial Property Purchase",
+    "Special Collateral – Nursing Home Property",
+    "Dropline Overdraft"
+  ];
+
+  function buildOptionCards(container, options, groupName){
+    container.innerHTML = options.map((opt, i) => {
+      const id = groupName + '-opt-' + i;
+      return `<div class="card">
+        <input type="radio" name="${groupName}" id="${id}" value="${opt.replace(/"/g,'&quot;')}">
+        <label for="${id}"><span class="dot"></span>${opt}</label>
+      </div>`;
+    }).join('');
+  }
+  buildOptionCards(document.getElementById('homeLoanOptions'), HOME_LOAN_OPTIONS, 'homeLoanPurpose');
+  buildOptionCards(document.getElementById('lapOptions'), LAP_OPTIONS, 'lapPurpose');
+
+  // ---- Generic reveal toggler ----
+  function toggle(el, show){ el.classList.toggle('open', !!show); }
+
+  function wireYesNo(groupName, revealId){
+    const reveal = document.getElementById(revealId);
+    form.addEventListener('change', (e) => {
+      if (e.target.name === groupName){
+        toggle(reveal, e.target.value === 'Yes');
+      }
+    });
+  }
+
+  wireYesNo('appNri', 'appNriCountryWrap');
+  wireYesNo('coNri', 'coNriCountryWrap');
+  wireYesNo('sal-hasLoans', 'sal-loansDetail');
+  wireYesNo('sal-latePay', 'sal-lateDetail');
+  wireYesNo('sep-hasLoans', 'sep-loansDetail');
+  wireYesNo('sep-latePay', 'sep-lateDetail');
+  wireYesNo('senp-hasLoans', 'senp-loansDetail');
+  wireYesNo('senp-latePay', 'senp-lateDetail');
+
+  // Country "Other" reveals
+  function wireCountryOther(selectId, otherWrapId){
+    document.getElementById(selectId).addEventListener('change', (e) => {
+      toggle(document.getElementById(otherWrapId), e.target.value === 'Other');
+    });
+  }
+  wireCountryOther('appNriCountry', 'appNriOtherWrap');
+  wireCountryOther('coNriCountry', 'coNriOtherWrap');
+
+  // Product type
+  form.addEventListener('change', (e) => {
+    if (e.target.name === 'productType'){
+      toggle(document.getElementById('homeLoanWrap'), e.target.value.startsWith('Home Loan'));
+      toggle(document.getElementById('lapWrap'), e.target.value.startsWith('LAP'));
+    }
+  });
+
+  // Employment tabs
+  const panels = {
+    'Salaried Individual': document.getElementById('panel-salaried'),
+    'Self-Employed Professional (SEP)': document.getElementById('panel-sep'),
+    'Self-Employed Non-Professional (SENP)': document.getElementById('panel-senp')
+  };
+  form.addEventListener('change', (e) => {
+    if (e.target.name === 'empCategory'){
+      Object.values(panels).forEach(p => p.classList.remove('open'));
+      panels[e.target.value].classList.add('open');
+      updateSummary();
+    }
+  });
+
+  // ---- Summary generation ----
+  function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function radioVal(name){ const el = form.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; }
+  function line(label, value, unit){
+    if (value === '' || value === null || value === undefined) return '';
+    return `  ${label}: ${value}${unit ? ' ' + unit : ''}\n`;
+  }
+
+  function nriBlock(prefix, title){
+    const status = radioVal(prefix + 'Nri');
+    let out = `${title} NRI Status: ${status}\n`;
+    if (status === 'Yes'){
+      const country = val(prefix + 'NriCountry');
+      let countryLabel = country;
+      if (country === 'Other'){
+        const other = val(prefix + 'NriOther');
+        countryLabel = other ? other : '(country not specified)';
+      }
+      if (country) out += `  Country: ${countryLabel}\n`;
+    }
+    return out;
+  }
+
+  function loanDetailBlock(prefix){
+    const hasLoans = radioVal(prefix + '-hasLoans');
+    let out = `  Existing / Pending Loans: ${hasLoans}\n`;
+    if (hasLoans === 'Yes'){
+      out += line('    Number of Active Loans', val(prefix + '-numLoans'));
+      out += line('    Total Outstanding Amount', val(prefix + '-outstanding'));
+      const late = radioVal(prefix + '-latePay');
+      out += `    History of Late Payments: ${late}\n`;
+      if (late === 'Yes'){
+        out += line('      Number of Late Payments', val(prefix + '-numLate'));
+      }
+    }
+    return out;
+  }
+
+  function empBlock(){
+    const cat = radioVal('empCategory');
+    let prefix = 'sal', title = 'Salaried Individual';
+    if (cat.startsWith('Self-Employed Professional')){ prefix = 'sep'; title = 'Self-Employed Professional (SEP)'; }
+    if (cat.startsWith('Self-Employed Non-Professional')){ prefix = 'senp'; title = 'Self-Employed Non-Professional (SENP)'; }
+
+    let out = `Employment Category: ${title}\n`;
+    out += line('  Full Name', val(prefix + '-name'));
+    out += line('  Age', val(prefix + '-age'));
+    out += line('  CIBIL Rating', val(prefix + '-cibil'));
+    if (prefix === 'sal'){
+      out += line('  Monthly Salary', val(prefix + '-salary'));
+      out += line('  Work Experience (Current Company)', val(prefix + '-exp'), 'yrs');
+    } else {
+      out += line('  Gross Annual Income / Salary', val(prefix + '-income'));
+      out += line('  Business Vintage / Experience', val(prefix + '-vintage'), 'yrs');
+    }
+    out += '\n  --- Existing Loan Details ---\n';
+    out += loanDetailBlock(prefix);
+    return out;
+  }
+
+  function updateSummary(){
+    const box = document.getElementById('summaryBox');
+    let out = '';
+    out += '========================================\n';
+    out += ' CUSTOMER DETAILS — LOAN APPLICATION\n';
+    out += '========================================\n\n';
+
+    out += '1. NRI STATUS\n----------------------------------------\n';
+    out += nriBlock('app', 'Applicant');
+    out += '\n';
+    out += nriBlock('co', 'Co-Applicant');
+    out += '\n';
+
+    out += '2. PRODUCT SELECTION\n----------------------------------------\n';
+    const productType = radioVal('productType');
+    out += `Product Type: ${productType || '—'}\n`;
+    if (productType.startsWith('Home Loan')){
+      const purpose = radioVal('homeLoanPurpose');
+      out += `Purpose: ${purpose || '—'}\n`;
+    } else if (productType.startsWith('LAP')){
+      const purpose = radioVal('lapPurpose');
+      out += `Purpose: ${purpose || '—'}\n`;
+    }
+    out += '\n';
+
+    out += '3. EMPLOYMENT & FINANCIAL PROFILE\n----------------------------------------\n';
+    out += empBlock();
+    out += '\n';
+
+    out += '========================================\n';
+    out += ' End of Section A — Page 1 of 3\n';
+    out += '========================================';
+
+    box.value = out;
+  }
+
+  form.addEventListener('input', updateSummary);
+  form.addEventListener('change', updateSummary);
+  updateSummary();
+
+  // Copy button
+  const copyBtn = document.getElementById('copyBtn');
+  copyBtn.addEventListener('click', async () => {
+    const box = document.getElementById('summaryBox');
+    try {
+      await navigator.clipboard.writeText(box.value);
+    } catch (err) {
+      box.select();
+      document.execCommand('copy');
+    }
+    const original = copyBtn.textContent;
+    copyBtn.textContent = 'Copied ✓';
+    copyBtn.classList.add('copied');
+    setTimeout(() => {
+      copyBtn.textContent = original;
+      copyBtn.classList.remove('copied');
+    }, 1600);
+  });
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
